@@ -1,0 +1,63 @@
+# ============================================================
+# 慢性病用药健康管理系统 — .gitignore
+# SpringBoot 后端 + Java 原生 Android
+# ============================================================
+
+### Java / Maven ###
+target/
+*.class
+*.jar
+*.war
+*.log
+!.mvn/wrapper/maven-wrapper.jar
+
+### Spring Boot ###
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### Gradle / Android ###
+.gradle/
+*.apk
+*.aab
+*.dex
+*.ap_
+build/
+captures/
+local.properties
+*.hprof
+
+### Android Studio / IDEA ###
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.idea_modules/
+.reasonix/
+
+### OS files ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+### Node (if any tooling) ###
+node_modules/
+
+### Application secrets ###
+*.pem
+*.key
+*.keystore
+*.jks
+
+### Environment / logs ###
+*.pid
+*.seed
+*.pid.lock
+application-local.yml
+application-dev.yml

@@ -1,0 +1,63 @@
+<resources>
+    <string name="app_name">用药管理</string>
+
+    <!-- 通用 -->
+    <string name="confirm">确定</string>
+    <string name="cancel">取消</string>
+    <string name="save">保存</string>
+    <string name="delete">删除</string>
+    <string name="edit">编辑</string>
+    <string name="back">返回</string>
+    <string name="loading">加载中…</string>
+    <string name="network_error">网络连接失败，请检查网络</string>
+
+    <!-- 登录/注册 -->
+    <string name="login_title">登录</string>
+    <string name="register_title">注册</string>
+    <string name="phone_hint">手机号</string>
+    <string name="password_hint">密码</string>
+    <string name="login_btn">登录</string>
+    <string name="register_btn">注册</string>
+    <string name="go_register">还没有账号？立即注册</string>
+    <string name="go_login">已有账号？立即登录</string>
+    <string name="logout">退出登录</string>
+
+    <!-- 首页 -->
+    <string name="today_compliance">今日依从率</string>
+    <string name="weekly_compliance">近7天平均依从率</string>
+    <string name="today_medication">今日用药</string>
+    <string name="no_records_today">今日暂无用药计划</string>
+
+    <!-- 用药计划 -->
+    <string name="plan_list_title">用药计划</string>
+    <string name="add_plan">新增计划</string>
+    <string name="edit_plan">编辑计划</string>
+    <string name="drug_name">药品名称</string>
+    <string name="dosage">服用剂量</string>
+    <string name="frequency_mode">频次模式</string>
+    <string name="frequency_mode_1">每日固定次数</string>
+    <string name="frequency_mode_2">每日固定时间</string>
+    <string name="start_date">开始日期</string>
+    <string name="end_date">结束日期</string>
+    <string name="end_date_hint">结束日期（选填，空表示长期）</string>
+    <string name="remark">备注</string>
+    <string name="remind_times">提醒时间</string>
+    <string name="no_plan">暂无用药计划</string>
+    <string name="confirm_delete_plan">确定删除该用药计划吗？</string>
+
+    <!-- 打卡 -->
+    <string name="pending">待服药</string>
+    <string name="taken">已服药</string>
+    <string name="missed">漏服</string>
+    <string name="check_in">打卡</string>
+    <string name="mark_taken">标记为已服药</string>
+    <string name="mark_missed">标记为漏服</string>
+    <string name="history_title">历史记录</string>
+    <string name="check_in_success">打卡成功</string>
+
+    <!-- 依从率 -->
+    <string name="compliance_title">依从率</string>
+    <string name="plan_count">计划服药</string>
+    <string name="actual_count">实际打卡</string>
+    <string name="missed_count">漏服次数</string>
+</resources>

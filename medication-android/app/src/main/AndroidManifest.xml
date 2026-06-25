@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- 网络权限 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- 通知权限（Android 13+） -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- 定时唤醒电源锁 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- 请求忽略电池优化（引导用户手动开启） -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <application
+        android:name=".MedicationApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="用药管理"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
+        android:theme="@style/Theme.MedicationManage"
+        tools:targetApi="34">
+
+        <!-- 登录界面 -->
+        <activity
+            android:name=".ui.login.LoginActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 注册界面 -->
+        <activity android:name=".ui.login.RegisterActivity" />
+
+        <!-- 主界面 -->
+        <activity android:name=".ui.dashboard.MainActivity" />
+
+        <!-- 用药计划列表 -->
+        <activity android:name=".ui.plan.PlanListActivity" />
+
+        <!-- 新增/编辑用药计划 -->
+        <activity android:name=".ui.plan.PlanEditActivity" />
+
+        <!-- 历史记录 -->
+        <activity android:name=".ui.record.HistoryActivity" />
+
+        <!-- 用药提醒广播接收器 -->
+        <receiver
+            android:name=".receiver.MedicationAlarmReceiver"
+            android:exported="false" />
+
+        <!-- Boot 完成广播接收器（重启后重新注册定时任务） -->
+        <receiver
+            android:name=".receiver.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- WorkManager 初始化（使用默认配置） -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
+    </application>
+
+</manifest>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 白色药丸形状 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,54c0,-8.84 7.16,-16 16,-16s16,7.16 16,16 -7.16,16 -16,16 -16,-7.16 -16,-16z" />
+    <!-- 十字标记 -->
+    <path
+        android:fillColor="#2196F3"
+        android:pathData="M52,46h8v8h8v8h-8v8h-8v-8h-8v-8h8z" />
+</vector>
