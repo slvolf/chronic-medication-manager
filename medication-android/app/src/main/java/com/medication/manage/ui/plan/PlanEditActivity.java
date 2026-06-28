@@ -54,11 +54,12 @@ public class PlanEditActivity extends AppCompatActivity {
 
         // 频次模式切换
         binding.chipGroupMode.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            if (checkedIds.contains(R.id.chip_mode_1)) {
+            int checkedId = group.getCheckedChipId();
+            if (checkedId == R.id.chip_mode_1) {
                 selectedMode = 1;
                 binding.tilTimes.setVisibility(View.VISIBLE);
                 binding.layoutTimes.setVisibility(View.GONE);
-            } else {
+            } else if (checkedId == R.id.chip_mode_2) {
                 selectedMode = 2;
                 binding.tilTimes.setVisibility(View.GONE);
                 binding.layoutTimes.setVisibility(View.VISIBLE);
