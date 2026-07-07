@@ -157,6 +157,29 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- 闹钟开关（仅每日固定时间模式可见） -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/layout_alarm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:visibility="gone"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@android:color/transparent"
+            app:strokeWidth="1dp"
+            app:strokeColor="@android:color/darker_gray"
+            app:cardCornerRadius="4dp">
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switch_alarm"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:checked="true"
+                android:paddingHorizontal="16dp"
+                android:text="设置闹钟提醒"
+                android:textSize="14sp" />
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- 开始日期 -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"

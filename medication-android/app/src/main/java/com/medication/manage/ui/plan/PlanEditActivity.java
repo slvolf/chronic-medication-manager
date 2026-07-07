@@ -2,7 +2,11 @@ package com.medication.manage.ui.plan;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
@@ -17,6 +21,7 @@ import com.medication.manage.api.RetrofitClient;
 import com.medication.manage.databinding.ActivityPlanEditBinding;
 import com.medication.manage.model.MedicationPlan;
 import com.medication.manage.model.Result;
+import com.medication.manage.service.AlarmScheduler;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -28,15 +33,12 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-/**
- * 新增/编辑用药计划界面
- */
 public class PlanEditActivity extends AppCompatActivity {
 
     private ActivityPlanEditBinding binding;
-    private Long editPlanId;                    // 编辑模式时的计划ID
-    private List<String> remindTimeList = new ArrayList<>(); // 提醒时间列表
-    private int selectedMode = 2;               // 默认固定时间模式
+    private Long editPlanId;
+    private List<String> remindTimeList = new ArrayList<>();
+    private int selectedMode = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,42 +48,34 @@ public class PlanEditActivity extends AppCompatActivity {
 
         binding.toolbar.setNavigationOnClickListener(v -> finish());
 
-        // 检查是否编辑模式
         editPlanId = getIntent().getLongExtra("plan_id", -1);
         if (editPlanId != -1) {
             binding.toolbar.setTitle("编辑计划");
             loadPlanDetail();
         }
 
-        // 频次模式切换
         binding.chipGroupMode.setOnCheckedStateChangeListener((group, checkedIds) -> {
             int checkedId = group.getCheckedChipId();
             if (checkedId == R.id.chip_mode_1) {
                 selectedMode = 1;
                 binding.tilTimes.setVisibility(View.VISIBLE);
                 binding.layoutTimes.setVisibility(View.GONE);
+                binding.layoutAlarm.setVisibility(View.GONE);
             } else if (checkedId == R.id.chip_mode_2) {
                 selectedMode = 2;
                 binding.tilTimes.setVisibility(View.GONE);
                 binding.layoutTimes.setVisibility(View.VISIBLE);
+                binding.layoutAlarm.setVisibility(View.VISIBLE);
             }
         });
-        binding.chipMode2.setChecked(true); // 默认固定时间
+        binding.chipMode2.setChecked(true);
 
-        // 添加提醒时间
         binding.btnAddTime.setOnClickListener(v -> showTimePicker());
-
-        // 日期选择
         binding.etStartDate.setOnClickListener(v -> showDatePicker(binding.etStartDate));
         binding.etEndDate.setOnClickListener(v -> showDatePicker(binding.etEndDate));
-
-        // 保存
         binding.btnSave.setOnClickListener(v -> savePlan());
     }
 
-    /**
-     * 加载计划详情（编辑模式）
-     */
     private void loadPlanDetail() {
         RetrofitClient.getInstance().getApiService().getPlanDetail(editPlanId)
                 .enqueue(new Callback<Result<MedicationPlan>>() {
@@ -117,16 +111,11 @@ public class PlanEditActivity extends AppCompatActivity {
                 });
     }
 
-    /**
-     * 显示时间选择器（上下滑动滚轮样式，类似闹钟界面）
-     */
     private void showTimePicker() {
-        // 创建布局
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.HORIZONTAL);
         layout.setPadding(48, 24, 48, 24);
 
-        // 小时选择器 (0-23)
         NumberPicker hourPicker = new NumberPicker(this);
         hourPicker.setMinValue(0);
         hourPicker.setMaxValue(23);
@@ -135,13 +124,11 @@ public class PlanEditActivity extends AppCompatActivity {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
         hourPicker.setLayoutParams(lp);
 
-        // 冒号分隔
         TextView colon = new TextView(this);
         colon.setText(":");
         colon.setTextSize(28);
         colon.setGravity(android.view.Gravity.CENTER);
 
-        // 分钟选择器 (0-59)
         NumberPicker minutePicker = new NumberPicker(this);
         minutePicker.setMinValue(0);
         minutePicker.setMaxValue(59);
@@ -149,7 +136,6 @@ public class PlanEditActivity extends AppCompatActivity {
         minutePicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
         minutePicker.setLayoutParams(lp);
 
-        // 格式化分钟为两位数显示
         NumberPicker.Formatter formatter = value -> String.format("%02d", value);
         hourPicker.setFormatter(formatter);
         minutePicker.setFormatter(formatter);
@@ -158,7 +144,6 @@ public class PlanEditActivity extends AppCompatActivity {
         layout.addView(colon);
         layout.addView(minutePicker);
 
-        // 弹出对话框
         new AlertDialog.Builder(this)
                 .setTitle("选择提醒时间")
                 .setView(layout)
@@ -170,20 +155,15 @@ public class PlanEditActivity extends AppCompatActivity {
                 .show();
     }
 
-    /**
-     * 添加提醒时间 Chip
-     */
     private void addTimeChip(String time) {
         if (remindTimeList.contains(time)) {
             Toast.makeText(this, "该时间已添加", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // 按时间顺序插入
         remindTimeList.add(time);
         java.util.Collections.sort(remindTimeList);
 
-        // 重新绘制所有 Chip（保持界面与列表顺序一致）
         binding.layoutTimeList.removeAllViews();
         for (String t : remindTimeList) {
             final String timeText = t;
@@ -198,9 +178,6 @@ public class PlanEditActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * 显示日期选择器
-     */
     private void showDatePicker(TextView textView) {
         Calendar cal = Calendar.getInstance();
         new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
@@ -209,9 +186,6 @@ public class PlanEditActivity extends AppCompatActivity {
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
     }
 
-    /**
-     * 保存用药计划
-     */
     private void savePlan() {
         String drugName = binding.etDrugName.getText().toString().trim();
         String dosage = binding.etDosage.getText().toString().trim();
@@ -229,19 +203,13 @@ public class PlanEditActivity extends AppCompatActivity {
         }
 
         Map<String, Object> params = new HashMap<>();
-        if (editPlanId != -1) {
-            params.put("id", editPlanId);
-        }
+        if (editPlanId != -1) params.put("id", editPlanId);
         params.put("drugName", drugName);
         params.put("dosage", dosage);
         params.put("frequencyMode", selectedMode);
         params.put("startDate", startDate);
-        if (!endDate.isEmpty()) {
-            params.put("endDate", endDate);
-        }
-        if (!remark.isEmpty()) {
-            params.put("remark", remark);
-        }
+        if (!endDate.isEmpty()) params.put("endDate", endDate);
+        if (!remark.isEmpty()) params.put("remark", remark);
 
         if (selectedMode == 1) {
             String timesStr = binding.etTimes.getText().toString().trim();
@@ -250,7 +218,6 @@ public class PlanEditActivity extends AppCompatActivity {
                 return;
             }
             params.put("frequencyTimes", Integer.parseInt(timesStr));
-            // 生成默认提醒时间（从0点均匀分布）
             List<String> defaultTimes = new ArrayList<>();
             int times = Integer.parseInt(timesStr);
             for (int i = 0; i < times; i++) {
@@ -263,7 +230,6 @@ public class PlanEditActivity extends AppCompatActivity {
                 Toast.makeText(this, "请添加至少一个提醒时间", Toast.LENGTH_SHORT).show();
                 return;
             }
-            // 发送前确保按时间排序
             java.util.Collections.sort(remindTimeList);
             params.put("remindTimes", remindTimeList);
         }
@@ -284,7 +250,47 @@ public class PlanEditActivity extends AppCompatActivity {
                 binding.btnSave.setEnabled(true);
                 if (response.body() != null && response.body().isSuccess()) {
                     Toast.makeText(PlanEditActivity.this, "保存成功", Toast.LENGTH_SHORT).show();
-                    finish();
+                    final MedicationPlan savedPlan = response.body().getData();
+
+                    final boolean alarmEnabled = selectedMode == 2 && binding.switchAlarm.isChecked();
+                    final Context appContext = getApplicationContext();
+                    final Long savedPlanId = savedPlan != null ? savedPlan.getId() : null;
+
+                    if (alarmEnabled && savedPlanId != null) {
+                        AlarmScheduler.schedulePlanAlarms(
+                                appContext, savedPlanId,
+                                drugName, dosage, remark,
+                                remindTimeList,
+                                startDate, endDate.isEmpty() ? null : endDate);
+                        saveAlarmPreference(appContext, savedPlanId, drugName, dosage, remark,
+                                remindTimeList, startDate, endDate);
+
+                        if (!AlarmScheduler.hasExactAlarmPermission(PlanEditActivity.this)) {
+                            Intent permIntent = AlarmScheduler.getExactAlarmSettingsIntent(PlanEditActivity.this);
+                            if (permIntent != null) startActivity(permIntent);
+                        }
+
+                        new AlertDialog.Builder(PlanEditActivity.this)
+                                .setTitle("通知设置")
+                                .setMessage("闹钟已注册，但因手机系统限制，"
+                                        + "需要您手动开启通知声音才能响铃。"
+                                        + "\n\n即将跳转通知设置页面，请将「用药提醒」渠道设置为："
+                                        + "\n• 声音：重要/高"
+                                        + "\n• 震动：开启"
+                                        + "\n• 锁屏通知：显示")
+                                .setPositiveButton("去设置", (dialog, which) -> {
+                                    Intent channelIntent = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+                                            .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName())
+                                            .putExtra(Settings.EXTRA_CHANNEL_ID, "medication_reminder");
+                                    startActivity(channelIntent);
+                                    finish();
+                                })
+                                .setNegativeButton("稍后", (dialog, which) -> finish())
+                                .setCancelable(false)
+                                .show();
+                    } else {
+                        finish();
+                    }
                 } else {
                     String msg = response.body() != null ? response.body().getMsg() : "保存失败";
                     Toast.makeText(PlanEditActivity.this, msg, Toast.LENGTH_SHORT).show();
@@ -297,5 +303,36 @@ public class PlanEditActivity extends AppCompatActivity {
                 Toast.makeText(PlanEditActivity.this, "网络连接失败", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void saveAlarmPreference(Context context, Long planId, String drugName, String dosage,
+                                      String remark, List<String> remindTimes,
+                                      String startDate, String endDate) {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences("medication_prefs", MODE_PRIVATE);
+            String json = prefs.getString("saved_alarms", "[]");
+            org.json.JSONArray alarms = new org.json.JSONArray(json);
+
+            for (int i = 0; i < alarms.length(); i++) {
+                if (alarms.getJSONObject(i).getLong("plan_id") == planId) {
+                    alarms.remove(i);
+                    break;
+                }
+            }
+
+            org.json.JSONObject obj = new org.json.JSONObject();
+            obj.put("plan_id", planId);
+            obj.put("drug_name", drugName);
+            obj.put("dosage", dosage);
+            obj.put("remark", remark);
+            obj.put("start_date", startDate);
+            obj.put("end_date", endDate.isEmpty() ? org.json.JSONObject.NULL : endDate);
+            obj.put("remind_times", new org.json.JSONArray(remindTimes));
+            alarms.put(obj);
+
+            prefs.edit().putString("saved_alarms", alarms.toString()).apply();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

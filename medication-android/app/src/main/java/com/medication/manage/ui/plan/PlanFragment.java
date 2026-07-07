@@ -17,6 +17,7 @@ import com.medication.manage.api.RetrofitClient;
 import com.medication.manage.databinding.ActivityPlanListBinding;
 import com.medication.manage.model.MedicationPlan;
 import com.medication.manage.model.Result;
+import com.medication.manage.service.AlarmScheduler;
 
 import java.util.List;
 
@@ -100,6 +101,10 @@ public class PlanFragment extends Fragment {
                                 @Override
                                 public void onResponse(Call<Result<Void>> call,
                                                        Response<Result<Void>> response) {
+                                    // 取消该计划的闹钟
+                                    if (plan.getId() != null) {
+                                        AlarmScheduler.cancelPlanAlarms(requireContext(), plan.getId());
+                                    }
                                     loadPlans();
                                 }
                                 @Override
