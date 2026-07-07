@@ -2,9 +2,11 @@ package com.medication.manage.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.medication.manage.entity.MedicationPlan;
+import com.medication.manage.entity.MedicationRecord;
 import com.medication.manage.entity.ReminderTime;
 import com.medication.manage.exception.BusinessException;
 import com.medication.manage.mapper.MedicationPlanMapper;
+import com.medication.manage.mapper.MedicationRecordMapper;
 import com.medication.manage.mapper.ReminderTimeMapper;
 import com.medication.manage.service.MedicationPlanService;
 import com.medication.manage.vo.request.MedicationPlanRequest;
@@ -29,6 +31,9 @@ public class MedicationPlanServiceImpl implements MedicationPlanService {
 
     @Autowired
     private ReminderTimeMapper reminderTimeMapper;
+
+    @Autowired
+    private MedicationRecordMapper recordMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -89,6 +94,9 @@ public class MedicationPlanServiceImpl implements MedicationPlanService {
         // 逻辑删除关联的提醒时间
         reminderTimeMapper.delete(new LambdaQueryWrapper<ReminderTime>()
                 .eq(ReminderTime::getPlanId, planId));
+        // 逻辑删除关联的用药记录
+        recordMapper.delete(new LambdaQueryWrapper<MedicationRecord>()
+                .eq(MedicationRecord::getPlanId, planId));
     }
 
     @Override

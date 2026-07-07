@@ -37,20 +37,10 @@ public class MedicationRecordServiceImpl implements MedicationRecordService {
     private ReminderTimeMapper reminderTimeMapper;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void generateTodayRecords(Long userId) {
         LocalDate today = LocalDate.now();
 
-        // 检查今日是否已生成了记录，避免重复生成
-        int existingCount = recordMapper.selectCount(
-                new LambdaQueryWrapper<MedicationRecord>()
-                        .eq(MedicationRecord::getUserId, userId)
-                        .eq(MedicationRecord::getRecordDate, today)).intValue();
-        if (existingCount > 0) {
-            return; // 今日已生成，无需重复操作
-        }
-
-        // 查询用户当前生效的用药计划（startDate <= today 且 (endDate IS NULL OR endDate >= today)）
+        // 查询用户当前生效的用药计划
         List<MedicationPlan> activePlans = planMapper.selectList(
                 new LambdaQueryWrapper<MedicationPlan>()
                         .eq(MedicationPlan::getUserId, userId)
@@ -58,38 +48,50 @@ public class MedicationRecordServiceImpl implements MedicationRecordService {
                         .and(w -> w.isNull(MedicationPlan::getEndDate)
                                 .or().ge(MedicationPlan::getEndDate, today)));
 
-        // 为每个计划生成今日的记录
+        // 每个计划独立生成，一个失败不影响其他
         for (MedicationPlan plan : activePlans) {
-            // 获取该计划的提醒时间列表
-            List<ReminderTime> reminderTimes = reminderTimeMapper.selectList(
-                    new LambdaQueryWrapper<ReminderTime>()
-                            .eq(ReminderTime::getPlanId, plan.getId()));
+            try {
+                // 检查该计划今日是否已有记录
+                int existingCount = recordMapper.selectCount(
+                        new LambdaQueryWrapper<MedicationRecord>()
+                                .eq(MedicationRecord::getPlanId, plan.getId())
+                                .eq(MedicationRecord::getRecordDate, today)).intValue();
+                if (existingCount > 0) {
+                    continue;
+                }
+                // 获取该计划的提醒时间列表
+                List<ReminderTime> reminderTimes = reminderTimeMapper.selectList(
+                        new LambdaQueryWrapper<ReminderTime>()
+                                .eq(ReminderTime::getPlanId, plan.getId()));
 
-            for (ReminderTime rt : reminderTimes) {
-                MedicationRecord record = new MedicationRecord();
-                record.setUserId(userId);
-                record.setPlanId(plan.getId());
-                record.setReminderTimeId(rt.getId());
-                record.setRecordDate(today);
-                record.setScheduledTime(rt.getRemindTime());
-                record.setStatus(0); // 待服药
-                recordMapper.insert(record);
-            }
-
-            // 如果计划是"每日固定次数"模式（frequencyMode=1）但无提醒时间配置
-            // 则按frequency_times均匀分布生成记录（间隔 = 24 / frequency_times 小时）
-            if (plan.getFrequencyMode() == 1 && reminderTimes.isEmpty() && plan.getFrequencyTimes() != null) {
-                int times = plan.getFrequencyTimes();
-                for (int i = 0; i < times; i++) {
-                    int hour = 24 / times * i;
+                for (ReminderTime rt : reminderTimes) {
                     MedicationRecord record = new MedicationRecord();
                     record.setUserId(userId);
                     record.setPlanId(plan.getId());
+                    record.setReminderTimeId(rt.getId());
                     record.setRecordDate(today);
-                    record.setScheduledTime(LocalTime.of(hour, 0));
-                    record.setStatus(0); // 待服药
+                    record.setScheduledTime(rt.getRemindTime());
+                    record.setStatus(0);
                     recordMapper.insert(record);
                 }
+
+                // 每日固定次数模式且无提醒时间时的回退逻辑
+                if (plan.getFrequencyMode() == 1 && reminderTimes.isEmpty() && plan.getFrequencyTimes() != null
+                        && plan.getFrequencyTimes() > 0) {
+                    int times = plan.getFrequencyTimes();
+                    for (int i = 0; i < times; i++) {
+                        int hour = 24 / times * i;
+                        MedicationRecord record = new MedicationRecord();
+                        record.setUserId(userId);
+                        record.setPlanId(plan.getId());
+                        record.setRecordDate(today);
+                        record.setScheduledTime(LocalTime.of(hour, 0));
+                        record.setStatus(0);
+                        recordMapper.insert(record);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
@@ -188,9 +190,11 @@ public class MedicationRecordServiceImpl implements MedicationRecordService {
                 .collect(Collectors.toSet());
         Map<Long, MedicationPlan> planMap = planMapper.selectBatchIds(planIds)
                 .stream()
-                .collect(Collectors.toMap(MedicationPlan::getId, p -> p));
+                .collect(Collectors.toMap(MedicationPlan::getId, p -> p,
+                        (existing, replacement) -> existing));
 
-        return records.stream().map(record -> {
+        return records.stream()
+                .map(record -> {
             MedicationRecordVO vo = new MedicationRecordVO();
             vo.setId(record.getId());
             vo.setPlanId(record.getPlanId());

@@ -85,6 +85,7 @@ CREATE TABLE `medication_record` (
   KEY `idx_plan_id` (`plan_id`),
   KEY `idx_record_date` (`record_date`),
   KEY `idx_user_date` (`user_id`, `record_date`),
+  UNIQUE KEY `uk_plan_date_time` (`plan_id`, `record_date`, `scheduled_time`),
   CONSTRAINT `fk_record_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
   CONSTRAINT `fk_record_plan` FOREIGN KEY (`plan_id`) REFERENCES `medication_plan` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用药记录表（打卡记录）';

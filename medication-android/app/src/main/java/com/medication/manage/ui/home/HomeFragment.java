@@ -11,9 +11,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.medication.manage.R;
-import com.medication.manage.adapter.MedicationRecordAdapter;
+import com.medication.manage.adapter.HomePageAdapter;
 import com.medication.manage.api.RetrofitClient;
-import com.medication.manage.databinding.FragmentHomeBinding;
 import com.medication.manage.model.ComplianceRate;
 import com.medication.manage.model.MedicationRecord;
 import com.medication.manage.model.Result;
@@ -25,34 +24,31 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-/**
- * 首页 Fragment — 今日依从率 + 近7天依从率 + 今日用药列表
- */
 public class HomeFragment extends Fragment {
 
-    private FragmentHomeBinding binding;
-    private MedicationRecordAdapter adapter;
+    private HomePageAdapter adapter;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        binding = FragmentHomeBinding.inflate(inflater, container, false);
-        return binding.getRoot();
+        return inflater.inflate(R.layout.fragment_home, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        binding.rvTodayRecords.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new MedicationRecordAdapter(null,
+        androidx.recyclerview.widget.RecyclerView rv = view.findViewById(R.id.rv_home);
+        rv.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        adapter = new HomePageAdapter(
                 record -> checkIn(record),
                 record -> markMissed(record));
-        binding.rvTodayRecords.setAdapter(adapter);
+        rv.setAdapter(adapter);
 
-        // 跳转历史 — 通过 Activity 的导航切换
-        binding.btnHistory.setOnClickListener(v -> {
+        // 历史记录按钮 — adapter 首次 bind 后会获得 header 引用
+        adapter.setOnHistoryClickListener(v -> {
             if (getActivity() != null) {
                 ((com.medication.manage.ui.dashboard.MainActivity) getActivity())
                         .switchToTab(R.id.nav_history);
@@ -82,9 +78,10 @@ public class HomeFragment extends Fragment {
                                            Response<Result<ComplianceRate>> response) {
                         if (response.body() != null && response.body().isSuccess()) {
                             ComplianceRate rate = response.body().getData();
-                            binding.tvTodayRate.setText(rate.getRateText());
-                            binding.tvTodayTaken.setText("已服药: " + rate.getActualCount());
-                            binding.tvTodayMissed.setText("漏服: " + rate.getMissedCount());
+                            if (rate != null) {
+                                adapter.updateTodayCompliance(rate.getRateText(),
+                                        rate.getActualCount(), rate.getMissedCount());
+                            }
                         }
                     }
                     @Override
@@ -100,9 +97,10 @@ public class HomeFragment extends Fragment {
                                            Response<Result<ComplianceRate>> response) {
                         if (response.body() != null && response.body().isSuccess()) {
                             ComplianceRate rate = response.body().getData();
-                            binding.tvWeeklyRate.setText(rate.getRateText());
-                            binding.tvWeeklyTaken.setText("已服药: " + rate.getActualCount());
-                            binding.tvWeeklyMissed.setText("漏服: " + rate.getMissedCount());
+                            if (rate != null) {
+                                adapter.updateWeeklyCompliance(rate.getRateText(),
+                                        rate.getActualCount(), rate.getMissedCount());
+                            }
                         }
                     }
                     @Override
@@ -118,13 +116,16 @@ public class HomeFragment extends Fragment {
                                            Response<Result<List<MedicationRecord>>> response) {
                         if (response.body() != null && response.body().isSuccess()) {
                             List<MedicationRecord> records = response.body().getData();
-                            adapter.updateData(records);
-                            binding.layoutEmpty.setVisibility(
-                                    records == null || records.isEmpty() ? View.VISIBLE : View.GONE);
+                            adapter.setRecords(records);
                         }
                     }
                     @Override
-                    public void onFailure(Call<Result<List<MedicationRecord>>> call, Throwable t) {}
+                    public void onFailure(Call<Result<List<MedicationRecord>>> call, Throwable t) {
+                        if (getContext() != null) {
+                            android.widget.Toast.makeText(getContext(), "网络异常",
+                                    android.widget.Toast.LENGTH_SHORT).show();
+                        }
+                    }
                 });
     }
 

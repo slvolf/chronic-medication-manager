@@ -52,9 +52,9 @@ public class MedicationRecordAdapter extends RecyclerView.Adapter<MedicationReco
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         MedicationRecord record = records.get(position);
 
-        holder.tvDrugName.setText(record.getDrugName());
+        holder.tvDrugName.setText(record.getDrugName() != null ? record.getDrugName() : "");
         holder.tvDosage.setText(record.getDosage() != null ? record.getDosage() : "");
-        holder.tvScheduledTime.setText(record.getScheduledTime());
+        holder.tvScheduledTime.setText(record.getScheduledTime() != null ? record.getScheduledTime() : "");
 
         // 根据状态设置颜色和文字
         int statusColor;

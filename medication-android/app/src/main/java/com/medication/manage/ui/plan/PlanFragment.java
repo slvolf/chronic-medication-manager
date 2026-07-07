@@ -87,7 +87,11 @@ public class PlanFragment extends Fragment {
                         }
                     }
                     @Override
-                    public void onFailure(Call<Result<List<MedicationPlan>>> call, Throwable t) {}
+                    public void onFailure(Call<Result<List<MedicationPlan>>> call, Throwable t) {
+                        if (getContext() != null) {
+                            android.widget.Toast.makeText(getContext(), "加载计划列表失败", android.widget.Toast.LENGTH_SHORT).show();
+                        }
+                    }
                 });
     }
 

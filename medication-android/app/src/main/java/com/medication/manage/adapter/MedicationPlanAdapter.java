@@ -50,7 +50,7 @@ public class MedicationPlanAdapter extends RecyclerView.Adapter<MedicationPlanAd
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         MedicationPlan plan = plans.get(position);
-        holder.tvDrugName.setText(plan.getDrugName());
+        holder.tvDrugName.setText(plan.getDrugName() != null ? plan.getDrugName() : "");
         holder.tvDosage.setText(plan.getDosage() != null ? "剂量：" + plan.getDosage() : "");
 
         // 构建频次文字
@@ -69,7 +69,7 @@ public class MedicationPlanAdapter extends RecyclerView.Adapter<MedicationPlanAd
         holder.tvFrequency.setText(freqText);
 
         // 日期范围
-        String dateRange = plan.getStartDate();
+        String dateRange = plan.getStartDate() != null ? plan.getStartDate() : "";
         if (plan.getEndDate() != null) {
             dateRange += " ~ " + plan.getEndDate();
         } else {

@@ -91,7 +91,11 @@ public class HistoryFragment extends Fragment {
                         }
                     }
                     @Override
-                    public void onFailure(Call<Result<List<MedicationRecord>>> call, Throwable t) {}
+                    public void onFailure(Call<Result<List<MedicationRecord>>> call, Throwable t) {
+                        if (getContext() != null) {
+                            android.widget.Toast.makeText(getContext(), "加载失败", android.widget.Toast.LENGTH_SHORT).show();
+                        }
+                    }
                 });
     }
 }
