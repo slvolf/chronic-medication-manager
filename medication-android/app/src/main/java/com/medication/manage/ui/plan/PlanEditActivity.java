@@ -1,10 +1,11 @@
 package com.medication.manage.ui.plan;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
-import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -117,14 +118,56 @@ public class PlanEditActivity extends AppCompatActivity {
     }
 
     /**
-     * 显示时间选择器
+     * 显示时间选择器（上下滑动滚轮样式，类似闹钟界面）
      */
     private void showTimePicker() {
-        Calendar cal = Calendar.getInstance();
-        new TimePickerDialog(this, (view, hourOfDay, minute) -> {
-            String time = String.format("%02d:%02d", hourOfDay, minute);
-            addTimeChip(time);
-        }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show();
+        // 创建布局
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.HORIZONTAL);
+        layout.setPadding(48, 24, 48, 24);
+
+        // 小时选择器 (0-23)
+        NumberPicker hourPicker = new NumberPicker(this);
+        hourPicker.setMinValue(0);
+        hourPicker.setMaxValue(23);
+        hourPicker.setValue(Calendar.getInstance().get(Calendar.HOUR_OF_DAY));
+        hourPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+        hourPicker.setLayoutParams(lp);
+
+        // 冒号分隔
+        TextView colon = new TextView(this);
+        colon.setText(":");
+        colon.setTextSize(28);
+        colon.setGravity(android.view.Gravity.CENTER);
+
+        // 分钟选择器 (0-59)
+        NumberPicker minutePicker = new NumberPicker(this);
+        minutePicker.setMinValue(0);
+        minutePicker.setMaxValue(59);
+        minutePicker.setValue(Calendar.getInstance().get(Calendar.MINUTE));
+        minutePicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
+        minutePicker.setLayoutParams(lp);
+
+        // 格式化分钟为两位数显示
+        NumberPicker.Formatter formatter = value -> String.format("%02d", value);
+        hourPicker.setFormatter(formatter);
+        minutePicker.setFormatter(formatter);
+
+        layout.addView(hourPicker);
+        layout.addView(colon);
+        layout.addView(minutePicker);
+
+        // 弹出对话框
+        new AlertDialog.Builder(this)
+                .setTitle("选择提醒时间")
+                .setView(layout)
+                .setPositiveButton("确定", (dialog, which) -> {
+                    String time = String.format("%02d:%02d", hourPicker.getValue(), minutePicker.getValue());
+                    addTimeChip(time);
+                })
+                .setNegativeButton("取消", null)
+                .show();
     }
 
     /**
