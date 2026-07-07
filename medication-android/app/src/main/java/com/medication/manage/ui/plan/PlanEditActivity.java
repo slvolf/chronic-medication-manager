@@ -178,16 +178,24 @@ public class PlanEditActivity extends AppCompatActivity {
             Toast.makeText(this, "该时间已添加", Toast.LENGTH_SHORT).show();
             return;
         }
-        remindTimeList.add(time);
 
-        Chip chip = new Chip(this);
-        chip.setText(time);
-        chip.setCloseIconVisible(true);
-        chip.setOnCloseIconClickListener(v -> {
-            binding.layoutTimeList.removeView(chip);
-            remindTimeList.remove(time);
-        });
-        binding.layoutTimeList.addView(chip);
+        // 按时间顺序插入
+        remindTimeList.add(time);
+        java.util.Collections.sort(remindTimeList);
+
+        // 重新绘制所有 Chip（保持界面与列表顺序一致）
+        binding.layoutTimeList.removeAllViews();
+        for (String t : remindTimeList) {
+            final String timeText = t;
+            Chip chip = new Chip(this);
+            chip.setText(timeText);
+            chip.setCloseIconVisible(true);
+            chip.setOnCloseIconClickListener(v -> {
+                binding.layoutTimeList.removeView(chip);
+                remindTimeList.remove(timeText);
+            });
+            binding.layoutTimeList.addView(chip);
+        }
     }
 
     /**
@@ -255,6 +263,8 @@ public class PlanEditActivity extends AppCompatActivity {
                 Toast.makeText(this, "请添加至少一个提醒时间", Toast.LENGTH_SHORT).show();
                 return;
             }
+            // 发送前确保按时间排序
+            java.util.Collections.sort(remindTimeList);
             params.put("remindTimes", remindTimeList);
         }
 

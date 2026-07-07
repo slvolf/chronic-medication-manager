@@ -147,7 +147,8 @@ public class MedicationPlanServiceImpl implements MedicationPlanService {
     private MedicationPlanVO buildPlanVOWithTimes(MedicationPlan plan) {
         List<ReminderTime> times = reminderTimeMapper.selectList(
                 new LambdaQueryWrapper<ReminderTime>()
-                        .eq(ReminderTime::getPlanId, plan.getId()));
+                        .eq(ReminderTime::getPlanId, plan.getId())
+                        .orderByAsc(ReminderTime::getRemindTime));
         List<LocalTime> remindTimes = times.stream()
                 .map(ReminderTime::getRemindTime)
                 .collect(Collectors.toList());
